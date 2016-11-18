@@ -12,6 +12,8 @@
 RCT_EXPORT_MODULE();
 RCT_EXPORT_VIEW_PROPERTY(images, NSArray);
 RCT_EXPORT_VIEW_PROPERTY(framesPerSecond, NSUInteger);
+RCT_EXPORT_VIEW_PROPERTY(start, BOOL);
+RCT_EXPORT_VIEW_PROPERTY(oneShot, BOOL);
 
 - (UIView *)view {
     return [RCTImageSequenceView new];
