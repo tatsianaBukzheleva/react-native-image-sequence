@@ -1,5 +1,6 @@
 package dk.madslee;
 
+import android.util.Log;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.uimanager.SimpleViewManager;
@@ -52,6 +53,7 @@ public class RCTImageSequenceManager extends SimpleViewManager<RCTImageSequenceV
         for (int index = 0; index < images.size(); index++) {
             ReadableMap map = images.getMap(index);
             String uri = map.getString("uri");
+            Log.d("react-native-image-sequence", "URI added: " + uri);
             uris.add(uri);
         }
 

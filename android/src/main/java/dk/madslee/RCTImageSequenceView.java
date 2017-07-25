@@ -1,5 +1,6 @@
 package dk.madslee;
 
+import android.util.Log;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -21,6 +22,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.RejectedExecutionException;
 
 public class RCTImageSequenceView extends ImageView {
     private Integer framesPerSecond = 24;
@@ -54,7 +56,7 @@ public class RCTImageSequenceView extends ImageView {
 
             try {
                 InputStream in;
-                if (this.uri.startsWith("http") == true) {
+                if (this.uri.startsWith("http") == true || this.uri.startsWith("file") == true) {
                     in = new URL(this.uri).openStream();
                     BitmapFactory.Options options = new BitmapFactory.Options();
                     options.inSampleSize = sampleSize;
@@ -119,7 +121,12 @@ public class RCTImageSequenceView extends ImageView {
             eventParams.putString("uri", uri);
             sendEvent("onLoadStart", eventParams);
 
-            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            try {
+                task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            } catch (RejectedExecutionException e) {
+                Log.e("react-native-image-sequence", "DownloadImageTask failed: " + e.getMessage());
+                break;
+            }
         }
     }
 
