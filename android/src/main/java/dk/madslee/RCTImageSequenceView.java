@@ -1,4 +1,4 @@
-package dk.madslee;
+package dk.madslee.imageSequence;
 
 import android.util.Log;
 import android.content.Context;
@@ -11,11 +11,9 @@ import android.net.Uri;
 import android.widget.ImageView;
 import android.support.annotation.Nullable;
 
+import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
-import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.WritableMap;
-import com.facebook.react.uimanager.ThemedReactContext;
-import com.facebook.react.uimanager.events.RCTEventEmitter;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,52 +24,83 @@ import java.util.concurrent.RejectedExecutionException;
 
 public class RCTImageSequenceView extends ImageView {
     private Integer framesPerSecond = 24;
+    private ArrayList<AsyncTask> activeTasks;
+    private HashMap<Integer, Bitmap> bitmaps;
+    private RCTResourceDrawableIdHelper resourceDrawableIdHelper;
+
+    private Integer drawableWidth = 0;
+    private Integer drawableHeight = 0;
+    private Boolean isAnimationStopped = true;
+
     private boolean start = true;
     private boolean oneShot = false;
     private Integer sampleSize = 1;
-    private ArrayList<AsyncTask> activeTasks;
-    private HashMap<Integer, Bitmap> bitmaps;
-    private AnimationDrawable animationDrawable;
-    private Context context = null;
 
-    private ThemedReactContext mThemedReactContext;
-
-    public RCTImageSequenceView(ThemedReactContext themedReactContext) {
-        super(themedReactContext);
-        mThemedReactContext = themedReactContext;
+    public RCTImageSequenceView(Context context) {
+        super(context);
+        resourceDrawableIdHelper = new RCTResourceDrawableIdHelper();
     }
 
     private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
         private final Integer index;
         private final String uri;
+        private final Context context;
+        private final Integer desiredWidth;
+        private final Integer desiredHeight;
 
-        public DownloadImageTask(Integer index, String uri) {
+        public DownloadImageTask(Integer index, String uri, Context context, Integer width, Integer height) {
             this.index = index;
             this.uri = uri;
+            this.context = context;
+            this.desiredWidth = width;
+            this.desiredHeight = height;
         }
 
         @Override
         protected Bitmap doInBackground(String... params) {
+            if (this.uri.startsWith("http")) {
+                return this.loadBitmapByExternalURL(this.uri);
+            }
+
+            return this.loadBitmapByLocalResource(this.uri);
+        }
+
+        private Bitmap loadBitmapByLocalResource(String uri) {
+            String filePrefix = "file://";
+            Bitmap bitmap = null;
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inScaled = false;
+            options.inDither = false;
+            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            options.inSampleSize = sampleSize;
+            if (uri.startsWith(filePrefix)) {
+                String filepath = uri.substring(uri.indexOf(filePrefix) + filePrefix.length());
+                bitmap = BitmapFactory.decodeFile(filepath, options);
+            } else {
+                bitmap = BitmapFactory.decodeResource(this.context.getResources(), resourceDrawableIdHelper.getResourceDrawableId(this.context, uri), options);
+            }
+
+            if (this.desiredWidth != 0 && this.desiredHeight != 0) {
+                return Bitmap.createScaledBitmap(bitmap, this.desiredWidth, this.desiredHeight, true);
+            }
+
+            return bitmap;
+        }
+
+        private Bitmap loadBitmapByExternalURL(String uri) {
             Bitmap bitmap = null;
 
             try {
-                InputStream in;
-                if (this.uri.startsWith("http") == true || this.uri.startsWith("file") == true) {
-                    in = new URL(this.uri).openStream();
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inSampleSize = sampleSize;
-                    bitmap = BitmapFactory.decodeStream(in, null, options);
-                } else {
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inSampleSize = sampleSize;
-                    bitmap = BitmapFactory.decodeResource(mThemedReactContext.getResources(), mThemedReactContext.getResources().getIdentifier(this.uri , "drawable", mThemedReactContext.getPackageName()), options);
-                }
+                InputStream in = new URL(uri).openStream();
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inSampleSize = sampleSize;
+                bitmap = BitmapFactory.decodeStream(in, null, options);
             } catch (IOException e) {
-                WritableMap eventParams = Arguments.createMap();
-                eventParams.putString("index", this.index.toString());
-                eventParams.putString("uri", this.uri);
-                eventParams.putString("message", e.getMessage());
-                sendEvent("onError", eventParams);
+                e.printStackTrace();
+            }
+
+            if (this.desiredWidth != 0 && this.desiredHeight != 0) {
+                return Bitmap.createScaledBitmap(bitmap, this.desiredWidth, this.desiredHeight, true);
             }
 
             return bitmap;
@@ -95,8 +124,7 @@ public class RCTImageSequenceView extends ImageView {
         activeTasks.remove(downloadImageTask);
 
         if (activeTasks.isEmpty()) {
-            sendEvent("onLoadComplete", null);
-            setupAnimationDrawable();
+            setupCustomAnimationDrawable();
         }
     }
 
@@ -112,29 +140,15 @@ public class RCTImageSequenceView extends ImageView {
         bitmaps = new HashMap<>(uris.size());
 
         for (int index = 0; index < uris.size(); index++) {
-            String uri = uris.get(index);
-            DownloadImageTask task = new DownloadImageTask(index, uri);
+            DownloadImageTask task = new DownloadImageTask(index, uris.get(index), getContext(), this.drawableWidth, this.drawableHeight);
             activeTasks.add(task);
 
-            WritableMap eventParams = Arguments.createMap();
-            eventParams.putString("index", Integer.toString(index));
-            eventParams.putString("uri", uri);
-            sendEvent("onLoadStart", eventParams);
-
             try {
-                task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-            } catch (RejectedExecutionException e) {
-                Log.e("react-native-image-sequence", "DownloadImageTask failed: " + e.getMessage());
+                task.execute();
+            } catch (RejectedExecutionException e){
+                Log.e("react-native-image-sequence", "DownloadImageTask failed" + e.getMessage());
                 break;
             }
-        }
-    }
-
-    public void setSampleSize(Integer sampleSize) {
-        this.sampleSize = sampleSize;
-        // updating sample size
-        if (isLoaded()) {
-            setupAnimationDrawable();
         }
     }
 
@@ -143,32 +157,7 @@ public class RCTImageSequenceView extends ImageView {
 
         // updating frames per second, results in building a new AnimationDrawable (because we cant alter frame duration)
         if (isLoaded()) {
-            setupAnimationDrawable();
-        }
-    }
-
-    public void setStart(boolean start) {
-        this.start = start;
-
-        //Start again if already loaded.
-        if (start == true && isLoaded()) {
-            setupAnimationDrawable();
-        }
-    }
-
-    public void setOneShot(boolean oneShot) {
-        this.oneShot = oneShot;
-
-        //Start again if already loaded.
-        if (isLoaded() && null != this.animationDrawable) {
-            this.animationDrawable.setOneShot(oneShot);
-        }
-    }
-
-    public void start() {
-        if (null != this.animationDrawable) {
-            this.animationDrawable.setOneShot(this.oneShot);
-            this.animationDrawable.start();
+            setupCustomAnimationDrawable();
         }
     }
 
@@ -180,21 +169,68 @@ public class RCTImageSequenceView extends ImageView {
         return activeTasks != null && !activeTasks.isEmpty();
     }
 
-    private void setupAnimationDrawable() {
-        this.animationDrawable = new AnimationDrawable();
+    private void setupCustomAnimationDrawable() {
+        final CustomAnimationDrawable animation = new CustomAnimationDrawable() {
+            @Override
+            void onAnimationFinish() {
+                // if animation is stopped don't send onEnd notification
+                if (!isAnimationStopped) {
+                    //Do something when finish animation
+                    ReactContext reactContext = (ReactContext) getContext();
+                    sendEvent(reactContext, "onEnd", null);
+                }
+            }
+        };
+
         for (int index = 0; index < bitmaps.size(); index++) {
             BitmapDrawable drawable = new BitmapDrawable(this.getResources(), bitmaps.get(index));
-            this.animationDrawable.addFrame(drawable, 1000 / framesPerSecond);
+            animation.addFrame(drawable, 1000 / framesPerSecond);
+        }
+        this.setImageDrawable(animation);
+        animation.selectDrawable(0);
+        animation.setOneShot(this.oneShot);
+        
+        if (this.start) {
+          animation.start();
+        } else {
+          animation.stop();
         }
 
-        if (start == true) {
-            start();
-        }
-
-        this.setImageDrawable(this.animationDrawable);
+        ReactContext reactContext = (ReactContext) getContext();
+        sendEvent(reactContext, "onLoad", null);
     }
 
-    private void sendEvent(String eventName, @Nullable WritableMap params) {
-        mThemedReactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(eventName, params);
+    //This set the sample size of the images, lower quality / less memory.
+    public void setSampleSize(Integer sampleSize) {
+        this.sampleSize = sampleSize;
+
+        // updating sample size
+        if (isLoaded()) {
+            setupCustomAnimationDrawable();
+        }
+    }
+
+    //Start when we want it to...
+    public void setStart(boolean start) {
+        this.start = start;
+
+        //Start again if already loaded.
+        if (isLoaded() && start == true) {
+            setupCustomAnimationDrawable();
+        }
+    }
+
+    //OneShot... play once and stop.
+    public void setOneShot(boolean oneShot) {
+        this.oneShot = oneShot;
+
+        //Start again if already loaded.
+        if (isLoaded()) {
+            setupCustomAnimationDrawable();
+        }
+    }
+
+    private void sendEvent(ReactContext reactContext, String eventName, @Nullable WritableMap params) {
+        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(eventName, params);
     }
 }

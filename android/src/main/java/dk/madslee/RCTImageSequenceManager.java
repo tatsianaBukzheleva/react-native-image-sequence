@@ -1,4 +1,4 @@
-package dk.madslee;
+package dk.madslee.imageSequence;
 
 import android.util.Log;
 import com.facebook.react.bridge.ReadableArray;
@@ -22,17 +22,6 @@ public class RCTImageSequenceManager extends SimpleViewManager<RCTImageSequenceV
     }
 
     /**
-     * sets the sample size of the image.
-     *
-     * @param view
-     * @param sampleSize
-     */
-    @ReactProp(name = "sampleSize")
-    public void setSampleSize(final RCTImageSequenceView view, Integer sampleSize) {
-        view.setSampleSize(sampleSize);
-    }
-
-    /**
      * sets the speed of the animation.
      *
      * @param view
@@ -52,12 +41,21 @@ public class RCTImageSequenceManager extends SimpleViewManager<RCTImageSequenceV
         ArrayList<String> uris = new ArrayList<>();
         for (int index = 0; index < images.size(); index++) {
             ReadableMap map = images.getMap(index);
-            String uri = map.getString("uri");
-            Log.d("react-native-image-sequence", "URI added: " + uri);
-            uris.add(uri);
+            uris.add(map.getString("uri"));
         }
 
         view.setImages(uris);
+    }
+
+    /**
+     * sets the sample size of the image.
+     *
+     * @param view
+     * @param sampleSize
+     */
+    @ReactProp(name = "sampleSize")
+    public void setSampleSize(final RCTImageSequenceView view, Integer sampleSize) {
+        view.setSampleSize(sampleSize);
     }
 
     /**
