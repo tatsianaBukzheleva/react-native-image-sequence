@@ -189,7 +189,7 @@ public class RCTImageSequenceView extends ImageView {
         this.setImageDrawable(animation);
         animation.selectDrawable(0);
         animation.setOneShot(this.oneShot);
-        
+
         if (this.start) {
           animation.start();
         } else {
@@ -228,6 +228,12 @@ public class RCTImageSequenceView extends ImageView {
         if (isLoaded()) {
             setupCustomAnimationDrawable();
         }
+    }
+
+    //Set desired size of the images
+    public void setSize(Integer width, Integer height) {
+        this.drawableWidth = width;
+        this.drawableHeight = height;
     }
 
     private void sendEvent(ReactContext reactContext, String eventName, @Nullable WritableMap params) {

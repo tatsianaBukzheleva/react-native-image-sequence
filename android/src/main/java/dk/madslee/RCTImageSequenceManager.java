@@ -9,6 +9,7 @@ import com.facebook.react.uimanager.annotations.ReactProp;
 
 import java.util.ArrayList;
 
+import javax.annotation.Nullable;
 
 public class RCTImageSequenceManager extends SimpleViewManager<RCTImageSequenceView> {
     @Override
@@ -78,5 +79,17 @@ public class RCTImageSequenceManager extends SimpleViewManager<RCTImageSequenceV
     @ReactProp(name = "oneShot")
     public void setOneShot(final RCTImageSequenceView view, boolean oneShot) {
         view.setOneShot(oneShot);
+    }
+
+    /**
+     * sets the size for scaling bitmaps
+     *
+     * @param size size object {width: xxx, height: xxx }
+     */
+    @ReactProp(name = "size")
+    public void setSize(final RCTImageSequenceView view, @Nullable ReadableMap size) {
+        if (size != null) {
+            view.setSize(size.getInt("width"), size.getInt("height"));
+        }
     }
 }

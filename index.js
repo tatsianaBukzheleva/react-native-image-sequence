@@ -28,6 +28,14 @@ class ImageSequence extends React.Component {
       normalized = [...normalized.slice(this.props.startFrameIndex), ...normalized.slice(0, this.props.startFrameIndex)]
     }
 
+    let props = this.props
+    if (props.size.width) {
+      props.size.width = Math.round(props.size.width)
+    }
+    if (props.size.height) {
+      props.size.height = Math.round(props.size.height)
+    }
+
     return (
       <RCTImageSequence
         {...this.props}
@@ -41,11 +49,12 @@ ImageSequence.propTypes = {
   images: React.PropTypes.array.isRequired,
   sampleSize: React.PropTypes.number,
   framesPerSecond: React.PropTypes.number,
+  size: React.PropTypes.shape({
+    width: React.PropTypes.number,
+    height: React.PropTypes.number
+  }),
   start: React.PropTypes.bool,
   oneShot: React.PropTypes.bool,
-  onLoadStart: React.PropTypes.func,
-  onLoadComplete: React.PropTypes.func,
-  onError: React.PropTypes.func
 }
 
 ImageSequence.defaultProps = {
@@ -64,6 +73,10 @@ const RCTImageSequence = requireNativeComponent('RCTImageSequence', {
     })).isRequired,
     sampleSize: React.PropTypes.number,
     framesPerSecond: React.PropTypes.number,
+    size: React.PropTypes.shape({
+      width: React.PropTypes.number,
+      height: React.PropTypes.number
+    }),
     start: React.PropTypes.bool,
     oneShot: React.PropTypes.bool,
     onLoadStart: React.PropTypes.func,
