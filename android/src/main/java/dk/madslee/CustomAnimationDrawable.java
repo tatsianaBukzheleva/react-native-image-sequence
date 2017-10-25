@@ -54,13 +54,15 @@ public abstract class CustomAnimationDrawable extends AnimationDrawable {
 
     @Override
     public void draw(Canvas canvas) {
-        if (current < this.getNumberOfFrames() && !stopped) {
+        if (current < this.getNumberOfFrames()) {
             BitmapDrawable bitmapDrawable = (BitmapDrawable) this.getFrame(current);
             Bitmap bmp = bitmapDrawable.getBitmap();
             //Painting Bitmap in canvas
             canvas.drawBitmap(bmp, 0, 0, null);
-            //Jump to next item
-            current++;
+            if (!stopped) {
+              //Jump to next item
+              current++;
+            }
         } else if (!this.isOneShot()) {
             current = 0;
         }
