@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { View, requireNativeComponent, DeviceEventEmitter } from 'react-native';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource'
 
@@ -45,16 +46,16 @@ class ImageSequence extends React.Component {
 }
 
 ImageSequence.propTypes = {
-  startFrameIndex: React.PropTypes.number,
-  images: React.PropTypes.array.isRequired,
-  sampleSize: React.PropTypes.number,
-  framesPerSecond: React.PropTypes.number,
-  size: React.PropTypes.shape({
-    width: React.PropTypes.number,
-    height: React.PropTypes.number
+  startFrameIndex: PropTypes.number,
+  images: PropTypes.array.isRequired,
+  sampleSize: PropTypes.number,
+  framesPerSecond: PropTypes.number,
+  size: PropTypes.shape({
+    width: PropTypes.number,
+    height: PropTypes.number
   }),
-  start: React.PropTypes.bool,
-  oneShot: React.PropTypes.bool,
+  start: PropTypes.bool,
+  oneShot: PropTypes.bool,
 }
 
 ImageSequence.defaultProps = {
@@ -68,20 +69,20 @@ ImageSequence.defaultProps = {
 const RCTImageSequence = requireNativeComponent('RCTImageSequence', {
   propTypes: {
     ...View.propTypes,
-    images: React.PropTypes.arrayOf(React.PropTypes.shape({
-      uri: React.PropTypes.string.isRequired
+    images: PropTypes.arrayOf(PropTypes.shape({
+      uri: PropTypes.string.isRequired
     })).isRequired,
-    sampleSize: React.PropTypes.number,
-    framesPerSecond: React.PropTypes.number,
-    size: React.PropTypes.shape({
-      width: React.PropTypes.number,
-      height: React.PropTypes.number
+    sampleSize: PropTypes.number,
+    framesPerSecond: PropTypes.number,
+    size: PropTypes.shape({
+      width: PropTypes.number,
+      height: PropTypes.number
     }),
-    start: React.PropTypes.bool,
-    oneShot: React.PropTypes.bool,
-    onLoadStart: React.PropTypes.func,
-    onLoadComplete: React.PropTypes.func,
-    onError: React.PropTypes.func
+    start: PropTypes.bool,
+    oneShot: PropTypes.bool,
+    onLoadStart: PropTypes.func,
+    onLoadComplete: PropTypes.func,
+    onError: PropTypes.func
   },
 })
 
