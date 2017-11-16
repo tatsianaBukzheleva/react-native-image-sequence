@@ -69,9 +69,6 @@ public class RCTImageSequenceView extends ImageView {
             String filePrefix = "file://";
             Bitmap bitmap = null;
             BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inScaled = false;
-            options.inDither = false;
-            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
             options.inSampleSize = sampleSize;
             if (uri.startsWith(filePrefix)) {
                 String filepath = uri.substring(uri.indexOf(filePrefix) + filePrefix.length());
