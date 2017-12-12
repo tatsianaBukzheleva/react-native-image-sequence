@@ -32,7 +32,7 @@ public class RCTImageSequenceView extends ImageView {
     private Integer drawableHeight = 0;
     private Boolean isAnimationStopped = true;
 
-    private boolean start = true;
+    private boolean autoStart = true;
     private boolean oneShot = false;
     private Integer sampleSize = 1;
 
@@ -187,7 +187,7 @@ public class RCTImageSequenceView extends ImageView {
         animation.selectDrawable(0);
         animation.setOneShot(this.oneShot);
 
-        if (this.start) {
+        if (this.autoStart) {
           animation.start();
         } else {
           animation.stop();
@@ -208,11 +208,11 @@ public class RCTImageSequenceView extends ImageView {
     }
 
     //Start when we want it to...
-    public void setStart(boolean start) {
-        this.start = start;
+    public void setAutoStart(boolean autoStart) {
+        this.autoStart = autoStart;
 
         //Start again if already loaded.
-        if (isLoaded() && start == true) {
+        if (isLoaded() && autoStart == true) {
             setupCustomAnimationDrawable();
         }
     }

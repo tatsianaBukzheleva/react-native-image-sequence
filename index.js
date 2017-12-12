@@ -54,7 +54,7 @@ ImageSequence.propTypes = {
     width: PropTypes.number,
     height: PropTypes.number
   }),
-  start: PropTypes.bool,
+  autoStart: PropTypes.bool,
   oneShot: PropTypes.bool,
 }
 
@@ -62,7 +62,7 @@ ImageSequence.defaultProps = {
   startFrameIndex: 0,
   sampleSize: 1,
   framesPerSecond: 24,
-  start: true,
+  autoStart: true,
   oneShot: false
 }
 
@@ -78,7 +78,7 @@ const RCTImageSequence = requireNativeComponent('RCTImageSequence', {
       width: PropTypes.number,
       height: PropTypes.number
     }),
-    start: PropTypes.bool,
+    autoStart: PropTypes.bool,
     oneShot: PropTypes.bool,
     onLoadStart: PropTypes.func,
     onLoadComplete: PropTypes.func,

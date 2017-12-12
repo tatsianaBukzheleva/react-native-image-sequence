@@ -65,9 +65,9 @@ public class RCTImageSequenceManager extends SimpleViewManager<RCTImageSequenceV
      * @param view
      * @param start
      */
-    @ReactProp(name = "start")
-    public void setStart(final RCTImageSequenceView view, boolean start) {
-        view.setStart(start);
+    @ReactProp(name = "autoStart")
+    public void setAutoStart(final RCTImageSequenceView view, boolean start) {
+        view.setAutoStart(start);
     }
 
     /**
